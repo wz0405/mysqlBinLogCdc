@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sync.demo.biz.binlogClient.mapper.BinlogClientMapper">
+
+
+    <select id="selectTableColumns" parameterType="map" resultType="map">
+        SELECT
+        TABLE_NAME,
+        COLUMN_NAME,
+        IS_NULLABLE,
+        COLUMN_KEY,
+        ORDINAL_POSITION,
+        COLUMN_COMMENT,
+        CHARACTER_MAXIMUM_LENGTH,
+        COLUMN_TYPE
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = #{dbName}
+        <if test="tableList != null and tableList.size() > 0">
+            AND TABLE_NAME IN
+            <foreach collection="tableList" item="table" open="(" separator="," close=")">
+                #{table}
+            </foreach>
+        </if>
+
+    </select>
+
+
+
+
+
+</mapper>

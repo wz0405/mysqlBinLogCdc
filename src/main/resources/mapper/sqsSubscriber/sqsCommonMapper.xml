@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sync.demo.biz.sqsSubscriber.mapper.SqsCommonMapper">
+
+    <select id="selectColumns" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage"
+            resultType="String">
+
+        SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = #{tableName} AND TABLE_SCHEMA = #{targetDB}
+
+        ORDER BY ORDINAL_POSITION
+    </select>
+
+
+    <select id="selectTablePrimaryKeys" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage"
+            resultType="String">
+
+        SELECT
+
+        COLUMN_NAME
+
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = #{targetDB}
+        AND TABLE_NAME = #{tableName}
+        AND COLUMN_KEY='PRI'
+
+
+    </select>
+
+
+
+
+    <insert id="insertTables" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage">
+
+        INSERT INTO ${targetDB}.${tableName} (
+        <foreach collection="dataSourceMap" item="value" separator=","
+                 index="index">
+            ${index}
+        </foreach>
+
+        ) VALUES(
+        <foreach collection="dataSourceMap" item="value" separator="," index="index">
+            <choose>
+                <when test="value!=null">
+                    #{value}
+                </when>
+                <otherwise>
+                    null
+                </otherwise>
+            </choose>
+        </foreach>
+
+        )
+
+    </insert>
+
+    <delete id="updateTables" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage">
+
+        UPDATE  ${targetDB}.${tableName} SET
+        <foreach collection="dataSourceMap" item="value" index="key" separator=",">
+            <choose>
+                <when test="value!=null">
+                    ${key} = #{value}
+                </when>
+                <otherwise>
+                    ${key} = null
+                </otherwise>
+            </choose>
+        </foreach>
+
+        WHERE
+        <foreach collection="pkSourceMap" item="value" index="key" separator="and">
+            ${key} = #{value}
+        </foreach>
+
+
+
+    </delete>
+    <delete id="deleteTables" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage">
+
+        DELETE FROM ${targetDB}.${tableName}
+
+        WHERE
+        <foreach collection="pkSourceMap" item="value" index="key" separator="and">
+            ${key} = #{value}
+        </foreach>
+
+
+    </delete>
+
+    <select id="isDupCheck" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage"
+            resultType="Integer">
+
+        SELECT COUNT(*) FROM ${targetDB}.${tableName}
+
+        WHERE
+
+        <foreach collection="pkSourceMap" item="value" index="key"
+                 separator="and">
+            ${key} = #{value}
+        </foreach>
+
+    </select>
+
+    <select id="selectSingleColumnMeta" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage"
+            resultType="com.sync.demo.biz.sqsSubscriber.meta.ColumInfo">
+        SELECT
+            TABLE_NAME,
+            COLUMN_NAME,
+            COLUMN_TYPE,
+            COLUMN_COMMENT,
+            CASE WHEN IS_NULLABLE = 'YES' THEN TRUE ELSE FALSE END AS nullable,
+            CASE WHEN COLUMN_DEFAULT IS NOT NULL THEN TRUE ELSE FALSE END AS hasDefault,
+            CASE WHEN COLUMN_KEY = 'PRI' THEN TRUE ELSE FALSE END AS primaryKey,
+            CHARACTER_MAXIMUM_LENGTH,
+            ORDINAL_POSITION,
+            COLUMN_KEY,
+            EXTRA,
+            CASE
+                WHEN EXTRA = 'auto_increment' THEN TRUE
+                ELSE FALSE
+                END AS autoIncrement
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = #{targetDB}
+          AND TABLE_NAME = #{tableName}
+          AND COLUMN_NAME = #{columnName}
+    </select>
+
+    <select id="selectTableColumnMeta" parameterType="com.sync.demo.biz.sqsSubscriber.service.meta.SqsMessage"
+            resultType="com.sync.demo.biz.sqsSubscriber.meta.ColumInfo">
+        SELECT
+            TABLE_NAME,
+            COLUMN_NAME,
+            COLUMN_TYPE,
+            COLUMN_COMMENT,
+            CASE WHEN IS_NULLABLE = 'YES' THEN TRUE ELSE FALSE END AS nullable,
+            CASE WHEN COLUMN_DEFAULT IS NOT NULL THEN TRUE ELSE FALSE END AS hasDefault,
+            CASE WHEN COLUMN_KEY = 'PRI' THEN TRUE ELSE FALSE END AS primaryKey,
+            CHARACTER_MAXIMUM_LENGTH,
+            ORDINAL_POSITION,
+            EXTRA,
+            CASE WHEN EXTRA = 'auto_increment' THEN TRUE ELSE FALSE END AS autoIncrement
+        FROM INFORMATION_SCHEMA.COLUMNS
+        WHERE TABLE_SCHEMA = #{targetDB}
+          AND TABLE_NAME = #{tableName}
+          AND COLUMN_NAME != 'UPD_DNT'
+        ORDER BY ORDINAL_POSITION
+    </select>
+
+
+
+
+
+
+</mapper>
