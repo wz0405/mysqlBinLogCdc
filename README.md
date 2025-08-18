@@ -1,4 +1,3 @@
----
 
 ```markdown
 # MySQL Binlog 기반 CDC (Change Data Capture) 데모
@@ -186,5 +185,3 @@ SQS 메시지 수신: { "table":"users", "op":"INSERT", "data":{"id":1, "name":"
 ```
 
 ```
-
----
